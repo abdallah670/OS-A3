@@ -1,0 +1,49 @@
+{
+    "input": {
+      "processes": [
+        {"name": "P1", "arrival": 0, "burst": 3, "priority": 3, "quantum": 10},
+        {"name": "P2", "arrival": 1, "burst": 2, "priority": 1, "quantum": 12},
+        {"name": "P3", "arrival": 2, "burst": 4, "priority": 2, "quantum": 8},
+        {"name": "P4", "arrival": 3, "burst": 1, "priority": 4, "quantum": 15},
+        {"name": "P5", "arrival": 4, "burst": 3, "priority": 5, "quantum": 9}
+      ]
+    },
+    "expectedOutput": {
+      "SJF": {
+        "executionOrder": ["P1", "P4", "P2", "P5", "P3"],
+        "processResults": [
+          {"name": "P1", "waitingTime": 0, "turnaroundTime": 3},
+          {"name": "P2", "waitingTime": 5, "turnaroundTime": 7},
+          {"name": "P3", "waitingTime": 11, "turnaroundTime": 15},
+          {"name": "P4", "waitingTime": 1, "turnaroundTime": 2},
+          {"name": "P5", "waitingTime": 5, "turnaroundTime": 8}
+        ],
+        "averageWaitingTime": 4.4,
+        "averageTurnaroundTime": 7.0
+      },
+      "RR": {
+        "executionOrder": ["P1", "P2", "P3", "P4", "P5"],
+        "processResults": [
+          {"name": "P1", "waitingTime": 0, "turnaroundTime": 3},
+          {"name": "P2", "waitingTime": 3, "turnaroundTime": 5},
+          {"name": "P3", "waitingTime": 5, "turnaroundTime": 9},
+          {"name": "P4", "waitingTime": 9, "turnaroundTime": 10},
+          {"name": "P5", "waitingTime": 10, "turnaroundTime": 13}
+        ],
+        "averageWaitingTime": 5.4,
+        "averageTurnaroundTime": 8.0
+      },
+      "Priority": {
+        "executionOrder": ["P1", "P2", "P3", "P1", "P3", "P1", "P4", "P5"],
+        "processResults": [
+          {"name": "P1", "waitingTime": 11, "turnaroundTime": 14},
+          {"name": "P2", "waitingTime": 1, "turnaroundTime": 3},
+          {"name": "P3", "waitingTime": 6, "turnaroundTime": 10},
+          {"name": "P4", "waitingTime": 12, "turnaroundTime": 13},
+          {"name": "P5", "waitingTime": 13, "turnaroundTime": 16}
+        ],
+        "averageWaitingTime": 8.6,
+        "averageTurnaroundTime": 11.2
+      }
+    }
+  }

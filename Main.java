@@ -1,0 +1,319 @@
+import java.util.*;
+
+// ==================== BASE PROCESS CLASS ====================
+class Process {
+    // Common process attributes for all schedulers
+    String name;
+    int arrivalTime;
+    int burstTime;
+    int priority;
+    int originalQuantum;  // For RR and AG
+    
+    // Dynamic state
+    int remainingTime;
+    int currentQuantum;   // For AG (changes dynamically)
+    int finishTime;
+    int startTime = -1;
+    int waitingTime;
+    int turnaroundTime;
+    
+    // For AG-specific tracking
+    int quantumUsed;
+    int phase;  // 0=FCFS, 1=Non-preemptive Priority, 2=Preemptive SJF
+    int phaseTimeUsed;
+    List<String> quantumHistory = new ArrayList<>();
+    
+    // For Priority scheduler (aging)
+    int age = 0;
+    
+    // Constructors
+    public Process(String name, int arrivalTime, int burstTime, int priority, int quantum) {
+        this.name = name;
+        this.arrivalTime = arrivalTime;
+        this.burstTime = burstTime;
+        this.priority = priority;
+        this.originalQuantum = quantum;
+        this.currentQuantum = quantum;
+        this.remainingTime = burstTime;
+    }
+    
+    public Process(String name, int arrivalTime, int burstTime, int priority) {
+        this(name, arrivalTime, burstTime, priority, 0);
+    }
+    
+    // Common helper methods
+    public boolean isFinished() {
+        return remainingTime <= 0;
+    }
+    
+    public void addQuantumHistory(String event) {
+        // To be implemented
+        
+    }
+    
+    // AG-specific helpers
+    public int getFCFSLimit() {
+        return (int) Math.ceil(0.25 * currentQuantum);
+    }
+    
+    public int getPriorityLimit() {
+        return (int) Math.ceil(0.5 * currentQuantum);
+    }
+}
+
+// ==================== BASE SCHEDULER INTERFACE ====================
+interface Scheduler {
+    void schedule();
+    void printExecutionOrder();
+    void printStatistics();
+    Map<String, Integer> getWaitingTimes();
+    Map<String, Integer> getTurnaroundTimes();
+}
+
+// ==================== PREEMPTIVE SJF SCHEDULER ====================
+class PreemptiveSJFScheduler implements Scheduler {
+    private List<Process> processes;
+    private List<String> executionOrder = new ArrayList<>();
+    private int contextSwitchTime;
+    private int currentTime = 0;
+    
+    public PreemptiveSJFScheduler(List<Process> processes, int contextSwitchTime) {
+        this.processes = new ArrayList<>(processes);
+        this.contextSwitchTime = contextSwitchTime;
+    }
+    
+    @Override
+    public void schedule() {
+        // To be implemented
+    }
+    
+    @Override
+    public void printExecutionOrder() {
+        // To be implemented
+    }
+    
+    @Override
+    public void printStatistics() {
+        // To be implemented
+    }
+    
+    @Override
+    public Map<String, Integer> getWaitingTimes() {
+        // To be implemented
+        return new HashMap<>();
+    }
+    
+    @Override
+    public Map<String, Integer> getTurnaroundTimes() {
+        // To be implemented
+        return new HashMap<>();
+    }
+}
+
+// ==================== ROUND ROBIN SCHEDULER ====================
+class RoundRobinScheduler implements Scheduler {
+    private List<Process> processes;
+    private List<String> executionOrder = new ArrayList<>();
+    private int timeQuantum;
+    private int contextSwitchTime;
+    private int currentTime = 0;
+    
+    public RoundRobinScheduler(List<Process> processes, int timeQuantum, int contextSwitchTime) {
+        this.processes = new ArrayList<>(processes);
+        this.timeQuantum = timeQuantum;
+        this.contextSwitchTime = contextSwitchTime;
+    }
+    
+    @Override
+    public void schedule() {
+        // To be implemented
+    }
+    
+    @Override
+    public void printExecutionOrder() {
+        // To be implemented
+    }
+    
+    @Override
+    public void printStatistics() {
+        // To be implemented
+    }
+    
+    @Override
+    public Map<String, Integer> getWaitingTimes() {
+        // To be implemented
+        return new HashMap<>();
+    }
+    
+    @Override
+    public Map<String, Integer> getTurnaroundTimes() {
+        // To be implemented
+        return new HashMap<>();
+    }
+}
+
+// ==================== PREEMPTIVE PRIORITY SCHEDULER ====================
+class PreemptivePriorityScheduler implements Scheduler {
+    private List<Process> processes;
+    private List<String> executionOrder = new ArrayList<>();
+    private int contextSwitchTime;
+    private int currentTime = 0;
+    private int agingInterval;  // To solve starvation
+    
+    public PreemptivePriorityScheduler(List<Process> processes, int contextSwitchTime, int agingInterval) {
+        this.processes = new ArrayList<>(processes);
+        this.contextSwitchTime = contextSwitchTime;
+        this.agingInterval = agingInterval;
+    }
+    
+    @Override
+    public void schedule() {
+        // To be implemented
+    }
+    
+    @Override
+    public void printExecutionOrder() {
+        // To be implemented
+    }
+    
+    @Override
+    public void printStatistics() {
+        // To be implemented
+    }
+    
+    @Override
+    public Map<String, Integer> getWaitingTimes() {
+        // To be implemented
+        return new HashMap<>();
+    }
+    
+    @Override
+    public Map<String, Integer> getTurnaroundTimes() {
+        // To be implemented
+        return new HashMap<>();
+    }
+    
+    private void applyAging() {
+        // To be implemented
+    }
+}
+
+// ==================== AG SCHEDULER ====================
+class AGScheduler implements Scheduler {
+    private List<Process> processes;
+    private List<Process> readyQueue = new ArrayList<>();
+    private List<String> executionOrder = new ArrayList<>();
+    private int currentTime = 0;
+    private Process currentProcess = null;
+    private int contextSwitchTime;
+    
+    public AGScheduler(List<Process> processes, int contextSwitchTime) {
+        this.processes = new ArrayList<>(processes);
+        this.contextSwitchTime = contextSwitchTime;
+    }
+    
+    @Override
+    public void schedule() {
+        // To be implemented
+    }
+    
+    @Override
+    public void printExecutionOrder() {
+        // To be implemented
+    }
+    
+    @Override
+    public void printStatistics() {
+        // To be implemented
+    }
+    
+    @Override
+    public Map<String, Integer> getWaitingTimes() {
+        // To be implemented
+        return new HashMap<>();
+    }
+    
+    @Override
+    public Map<String, Integer> getTurnaroundTimes() {
+        // To be implemented
+        return new HashMap<>();
+    }
+    
+    public void printQuantumHistory() {
+        // AG-specific requirement
+        // To be implemented
+    }
+    
+    // AG-specific helper methods
+    private void addArrivingProcesses() {
+        // To be implemented
+    }
+    
+    private void handleProcessExecution() {
+        // To be implemented
+    }
+    
+    private void applyQuantumUpdateRule(int scenario, Process process) {
+        // To be implemented
+    }
+}
+
+// ==================== MAIN SIMULATOR CLASS ====================
+class CPUSchedulerSimulator {
+    private List<Process> processes = new ArrayList<>();
+    private int rrTimeQuantum;
+    private int contextSwitchTime;
+    private int priorityAgingInterval = 5;  // Default
+    
+    // Scheduler instances
+    private PreemptiveSJFScheduler sjfScheduler;
+    private RoundRobinScheduler rrScheduler;
+    private PreemptivePriorityScheduler priorityScheduler;
+    private AGScheduler agScheduler;
+    
+    // Input methods
+    public void readInput() {
+        // To be implemented
+    }
+    
+    public void addProcess(String name, int arrivalTime, int burstTime, int priority, int quantum) {
+        processes.add(new Process(name, arrivalTime, burstTime, priority, quantum));
+    }
+    
+    // Run all schedulers
+    public void runAllSchedulers() {
+        // Create scheduler instances
+        sjfScheduler = new PreemptiveSJFScheduler(processes, contextSwitchTime);
+        rrScheduler = new RoundRobinScheduler(processes, rrTimeQuantum, contextSwitchTime);
+        priorityScheduler = new PreemptivePriorityScheduler(processes, contextSwitchTime, priorityAgingInterval);
+        agScheduler = new AGScheduler(processes, contextSwitchTime);
+        
+        // Run schedulers
+        System.out.println("\n=== Preemptive SJF Scheduling ===");
+        sjfScheduler.schedule();
+        
+        System.out.println("\n=== Round Robin Scheduling ===");
+        rrScheduler.schedule();
+        
+        System.out.println("\n=== Preemptive Priority Scheduling ===");
+        priorityScheduler.schedule();
+        
+        System.out.println("\n=== AG Scheduling ===");
+        agScheduler.schedule();
+        agScheduler.printQuantumHistory();  // AG-specific output
+    }
+    
+    // Unit test helper
+    public void runTest(String testName, List<Process> testProcesses) {
+        // To be implemented
+    }
+}
+
+// ==================== MAIN CLASS ====================
+public class Main {
+    public static void main(String[] args) {
+        CPUSchedulerSimulator simulator = new CPUSchedulerSimulator();
+        simulator.readInput();
+        simulator.runAllSchedulers();
+    }
+}
