@@ -79,30 +79,107 @@ class PreemptiveSJFScheduler implements Scheduler {
     }
     
     @Override
-    public void schedule() {
-        // To be implemented
-    }
+    public void schedule() 
+    {
+        int completed = 0;
+        Process currentProcess = null;
+
+        while (completed < processes.size()) {
+
+            // Get all available processes
+            Process shortest = null;
+            for (Process p : processes) {
+                if (p.arrivalTime <= currentTime && p.remainingTime > 0) {
+                    if (shortest == null || p.remainingTime < shortest.remainingTime||
+                        (p.remainingTime == shortest.remainingTime && 
+                        p.arrivalTime < shortest.arrivalTime)) 
+                    {
+                        shortest = p;
+                    }
+                }
+            }
+
+            // No process available → idle CPU
+            if (shortest == null) {
+                currentTime++;
+                executionOrder.add("Idle");
+                currentProcess = null;
+                continue;
+            }
+
+            // Context switching
+            if (currentProcess != shortest && currentProcess != null) {
+                    currentTime += contextSwitchTime;
+                    // Log context switch
+                    for(int i = 0; i < contextSwitchTime; i++) {
+                        executionOrder.add("CS");
+                    }
+            }
+            currentProcess = shortest;
+
+            // First time execution
+            if (currentProcess.startTime == -1) {
+                currentProcess.startTime = currentTime;
+            }
+
+            // Execute for 1 time unit
+            // the process with the shortest remaining time
+            executionOrder.add(currentProcess.name);
+            currentProcess.remainingTime--;
+            currentTime++;
+
+            // If process finished
+            if (currentProcess.remainingTime == 0) {
+                currentProcess.finishTime = currentTime;
+                completed++;
+            }
+        }
+
+        // Calculate statistics
+        for (Process p : processes) {
+            p.turnaroundTime = p.finishTime - p.arrivalTime; 
+            p.waitingTime = p.turnaroundTime - p.burstTime;
+        }
+
+        printExecutionOrder();
+        printStatistics();
+}
+
     
     @Override
     public void printExecutionOrder() {
-        // To be implemented
+        System.out.println("Execution Order:");
+        for (String s : executionOrder) 
+            System.out.print("| " + s + " ");
+        System.out.println("|");
     }
     
     @Override
     public void printStatistics() {
-        // To be implemented
+        System.out.println("\nProcess\tWaiting Time\tTurnaround Time");
+        for (Process p : processes) {
+            System.out.println(p.name + "\t\t" +
+                    p.waitingTime + "\t\t" +
+                    p.turnaroundTime);
+        }
     }
     
     @Override
     public Map<String, Integer> getWaitingTimes() {
-        // To be implemented
-        return new HashMap<>();
+        Map<String, Integer> map = new HashMap<>();
+        for (Process p : processes) {
+            map.put(p.name, p.waitingTime);
+        }
+        return map;
     }
     
     @Override
     public Map<String, Integer> getTurnaroundTimes() {
-        // To be implemented
-        return new HashMap<>();
+        Map<String, Integer> map = new HashMap<>();
+        for (Process p : processes) {
+            map.put(p.name, p.turnaroundTime);
+        }
+        return map;
     }
 }
 
