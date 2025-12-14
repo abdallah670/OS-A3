@@ -1,32 +1,31 @@
 import java.util.*;
 
-// ==================== BASE PROCESS CLASS ====================
+
 class Process {
-    // Common process attributes for all schedulers
     String name;
     int arrivalTime;
     int burstTime;
     int priority;
-    int originalQuantum;  // For RR and AG
+    int originalQuantum;
     
     // Dynamic state
     int remainingTime;
-    int currentQuantum;   // For AG (changes dynamically)
+    int currentQuantum;
+    int quantumUsed;
     int finishTime;
     int startTime = -1;
+    
+    // AG tracking
+    int phase;  // 0=FCFS, 1=Priority, 2=SJF
+    int phaseTimeUsed;
+    
+    // Statistics
     int waitingTime;
     int turnaroundTime;
     
-    // For AG-specific tracking
-    int quantumUsed;
-    int phase;  // 0=FCFS, 1=Non-preemptive Priority, 2=Preemptive SJF
-    int phaseTimeUsed;
+    // History tracking
     List<String> quantumHistory = new ArrayList<>();
     
-    // For Priority scheduler (aging)
-    int age = 0;
-    
-    // Constructors
     public Process(String name, int arrivalTime, int burstTime, int priority, int quantum) {
         this.name = name;
         this.arrivalTime = arrivalTime;
@@ -35,23 +34,17 @@ class Process {
         this.originalQuantum = quantum;
         this.currentQuantum = quantum;
         this.remainingTime = burstTime;
-    }
-    
-    public Process(String name, int arrivalTime, int burstTime, int priority) {
-        this(name, arrivalTime, burstTime, priority, 0);
-    }
-    
-    // Common helper methods
-    public boolean isFinished() {
-        return remainingTime <= 0;
-    }
-    
-    public void addQuantumHistory(String event) {
-        // To be implemented
+        this.quantumUsed = 0;
+        this.phase = 0;
+        this.phaseTimeUsed = 0;
         
+        quantumHistory.add("Initial: " + currentQuantum);
     }
     
-    // AG-specific helpers
+    public void addQuantumHistory(int time, String event) {
+        quantumHistory.add("Time " + time + ": " + event);
+    }
+    
     public int getFCFSLimit() {
         return (int) Math.ceil(0.25 * currentQuantum);
     }
@@ -59,8 +52,11 @@ class Process {
     public int getPriorityLimit() {
         return (int) Math.ceil(0.5 * currentQuantum);
     }
+    
+    public boolean isFinished() {
+        return remainingTime <= 0;
+    }
 }
-
 // ==================== BASE SCHEDULER INTERFACE ====================
 interface Scheduler {
     void schedule();
