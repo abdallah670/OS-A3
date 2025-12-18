@@ -212,46 +212,230 @@ class PreemptiveSJFScheduler implements Scheduler {
 }
 
 // ==================== ROUND ROBIN SCHEDULER ====================
+
 class RoundRobinScheduler implements Scheduler {
     private List<Process> processes;
     private List<String> executionOrder = new ArrayList<>();
     private int timeQuantum;
     private int contextSwitchTime;
     private int currentTime = 0;
-    
+    private Map<String, Process> processMap = new HashMap<>();
+    private Map<String, Integer> startTimeMap = new HashMap<>();
+    private Map<String, Integer> lastExecutionTimeMap = new HashMap<>();
+    private Map<String, Integer> waitingTimeMap = new HashMap<>();
+
     public RoundRobinScheduler(List<Process> processes, int timeQuantum, int contextSwitchTime) {
         this.processes = new ArrayList<>(processes);
         this.timeQuantum = timeQuantum;
         this.contextSwitchTime = contextSwitchTime;
+
+        // Initialize maps
+        for (Process p : processes) {
+            processMap.put(p.name, p);
+            lastExecutionTimeMap.put(p.name, p.arrivalTime);
+            waitingTimeMap.put(p.name, 0);
+        }
     }
-    
+
     @Override
     public void schedule() {
-        // To be implemented
+        //we create deep copies of processes to work with
+        List<Process> workingProcesses = new ArrayList<>();
+        for (Process p : processes) {
+            Process copy = new Process(p.name, p.arrivalTime, p.burstTime, p.priority, p.originalQuantum);
+            copy.remainingTime = p.burstTime;
+            copy.startTime = -1;
+            workingProcesses.add(copy);
+        }
+
+        //then sort by arrival time
+        workingProcesses.sort(Comparator.comparingInt(p -> p.arrivalTime));
+
+        Queue<Process> readyQueue = new LinkedList<>();
+        Process currentProcess = null;
+        int nextProcessIndex = 0;
+        int completed = 0;
+
+        //then reset execution order
+        executionOrder.clear();
+
+        while (completed < workingProcesses.size()) {
+            //we add newly arrived processes to ready queue
+            while (nextProcessIndex < workingProcesses.size() &&
+                    workingProcesses.get(nextProcessIndex).arrivalTime <= currentTime) {
+                Process arrivedProcess = workingProcesses.get(nextProcessIndex);
+                readyQueue.add(arrivedProcess);
+                nextProcessIndex++;
+            }
+
+            //if no current process but ready queue has processes
+            if (currentProcess == null && !readyQueue.isEmpty()) {
+                currentProcess = readyQueue.poll();
+
+                //first time execution
+                if (currentProcess.startTime == -1) {
+                    currentProcess.startTime = currentTime;
+                }
+
+                  //we calculate waiting time since last execution.
+                int waitingPeriod = currentTime - lastExecutionTimeMap.get(currentProcess.name);
+                waitingTimeMap.put(currentProcess.name,
+                        waitingTimeMap.get(currentProcess.name) + waitingPeriod);
+
+                //then add to execution order.
+                executionOrder.add(currentProcess.name);
+            }
+
+            //if still no process, advance time to next arrival
+            if (currentProcess == null && nextProcessIndex < workingProcesses.size()) {
+                currentTime = workingProcesses.get(nextProcessIndex).arrivalTime;
+                continue;
+            }
+
+            //if no process at all and that shouldn't happen , break.
+            if (currentProcess == null) {
+                break;
+            }
+
+            //execute current process
+            int executionTime = Math.min(timeQuantum, currentProcess.remainingTime);
+
+            //update the last execution time
+            lastExecutionTimeMap.put(currentProcess.name, currentTime);
+
+            //execute for executionTime
+            currentTime += executionTime;
+            currentProcess.remainingTime -= executionTime;
+
+            //add newly arrived processes during execution
+            while (nextProcessIndex < workingProcesses.size() &&
+                    workingProcesses.get(nextProcessIndex).arrivalTime <= currentTime) {
+                readyQueue.add(workingProcesses.get(nextProcessIndex));
+                nextProcessIndex++;
+            }
+
+            //we check if process has finished.
+            if (currentProcess.remainingTime == 0) {
+                currentProcess.finishTime = currentTime;
+                completed++;
+
+                //then calculate turnaround time for original process.
+                Process original = processMap.get(currentProcess.name);
+                original.finishTime = currentProcess.finishTime;
+                original.turnaroundTime = original.finishTime - original.arrivalTime;
+                original.waitingTime = original.turnaroundTime - original.burstTime;
+
+                //we add context switching if more processes remain.
+
+                if (completed < workingProcesses.size()) {
+                    currentTime += contextSwitchTime;
+                    //we add context switch to execution order
+                    for (int i = 0; i < contextSwitchTime; i++) {
+                        executionOrder.add("CS");
+                    }
+                }
+
+                currentProcess = null;
+            } else {
+                //if process didn't finish, add it to end of ready queue.
+                readyQueue.add(currentProcess);
+                currentProcess = null;
+
+                //add context switching time
+                if (!readyQueue.isEmpty() || nextProcessIndex < workingProcesses.size()) {
+                    currentTime += contextSwitchTime;
+                    //add context switch to execution order
+                    for (int i = 0; i < contextSwitchTime; i++) {
+                        executionOrder.add("CS");
+                    }
+                }
+            }
+
+            //add newly arrived processes during context switch.
+            while (nextProcessIndex < workingProcesses.size() &&
+                    workingProcesses.get(nextProcessIndex).arrivalTime <= currentTime) {
+                readyQueue.add(workingProcesses.get(nextProcessIndex));
+                nextProcessIndex++;
+            }
+        }
     }
-    
+
     @Override
     public void printExecutionOrder() {
-        // To be implemented
+        System.out.println("Execution Order:");
+        System.out.print("|");
+        for (int i = 0; i < executionOrder.size(); i++) {
+            System.out.print(" " + executionOrder.get(i) + " |");
+            if ((i + 1) % 10 == 0 && i != executionOrder.size() - 1) {
+                System.out.print("\n|");
+            }
+        }
+        System.out.println();
     }
-    
+
     @Override
     public void printStatistics() {
-        // To be implemented
+        System.out.println("\nProcess\tWaiting Time\tTurnaround Time");
+        for (Process p : processes) {
+            System.out.println(p.name + "\t\t" +
+                    p.waitingTime + "\t\t" +
+                    p.turnaroundTime);
+        }
+
+        //calculate averages
+        double avgWaitingTime = processes.stream()
+                .mapToInt(p -> p.waitingTime)
+                .average()
+                .orElse(0.0);
+
+        double avgTurnaroundTime = processes.stream()
+                .mapToInt(p -> p.turnaroundTime)
+                .average()
+                .orElse(0.0);
+
+        System.out.printf("\nAverage Waiting Time: %.2f", avgWaitingTime);
+        System.out.printf("\nAverage Turnaround Time: %.2f\n", avgTurnaroundTime);
     }
-    
+
     @Override
     public Map<String, Integer> getWaitingTimes() {
-        // To be implemented
-        return new HashMap<>();
+        Map<String, Integer> map = new HashMap<>();
+        for (Process p : processes) {
+            map.put(p.name, p.waitingTime);
+        }
+        return map;
     }
-    
+
     @Override
     public Map<String, Integer> getTurnaroundTimes() {
-        // To be implemented
-        return new HashMap<>();
+        Map<String, Integer> map = new HashMap<>();
+        for (Process p : processes) {
+            map.put(p.name, p.turnaroundTime);
+        }
+        return map;
+    }
+
+    //getter for execution order that is useful for testing.
+    public List<String> getExecutionOrder() {
+        return new ArrayList<>(executionOrder);
+    }
+
+    //getter for averages that also useful for testing
+    public double getAverageWaitingTime() {
+        return processes.stream()
+                .mapToInt(p -> p.waitingTime)
+                .average()
+                .orElse(0.0);
+    }
+
+    public double getAverageTurnaroundTime() {
+        return processes.stream()
+                .mapToInt(p -> p.turnaroundTime)
+                .average()
+                .orElse(0.0);
     }
 }
+
 
 // ==================== PREEMPTIVE PRIORITY SCHEDULER ====================
 class PreemptivePriorityScheduler implements Scheduler {
