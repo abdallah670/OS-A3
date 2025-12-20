@@ -1,3 +1,7 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 
 class Process {
@@ -23,7 +27,10 @@ class Process {
     
     // History
     List<Integer> quantumHistory = new ArrayList<>();
+<<<<<<< HEAD
     public int lastReadyTime;
+=======
+>>>>>>> 0c5b4d07e4813f46a8ff340912655710ed2e8dc6
     
     public Process(String name, int arrivalTime, int burstTime, int priority, int quantum) {
         this.name = name;
