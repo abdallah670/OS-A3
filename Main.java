@@ -85,7 +85,8 @@ class Process {
 // ==================== BASE SCHEDULER INTERFACE ====================
 interface Scheduler {
     void schedule();
-   
+    void printExecutionOrder();
+    void printStatistics();
     Map<String, Integer> getWaitingTimes();
     Map<String, Integer> getTurnaroundTimes();
     List<String> getExecutionOrder();
@@ -165,10 +166,36 @@ class PreemptiveSJFScheduler implements Scheduler {
             p.turnaroundTime = p.finishTime - p.arrivalTime; 
             p.waitingTime = p.turnaroundTime - p.burstTime;
         }
+        System.err.println("SJFS Scheduler");
+        printExecutionOrder();
+        printStatistics();
 
       
 }
-
+    @Override
+    public void printExecutionOrder() {
+        System.out.println("Execution Order: " + executionOrder);
+    }
+    @Override
+    public void printStatistics() {
+        System.out.println("Statistics: ");
+        System.err.println("     AWT    TAT");
+        for (Process p : processes) {
+            System.out.println(p.name + ": " + p.turnaroundTime + "     " + p.waitingTime);
+        }
+        //avg
+        double avgTurnaroundTime = 0;
+        double avgWaitingTime = 0;
+        for (Process p : processes) {
+            avgTurnaroundTime += p.turnaroundTime;
+            avgWaitingTime += p.waitingTime;
+        }
+        avgTurnaroundTime /= processes.size();
+        avgWaitingTime /= processes.size();
+        System.out.println("Average Turnaround Time: " + avgTurnaroundTime);
+        System.out.println("Average Waiting Time: " + avgWaitingTime);
+         System.out.println("=".repeat(100));
+    }
     
     
     @Override
@@ -342,8 +369,34 @@ class RoundRobinScheduler implements Scheduler {
                 nextProcessIndex++;
             }
         }
+        System.err.println("Round Robin Scheduler");
+         printExecutionOrder();
+        printStatistics();
     }
-
+ @Override
+    public void printExecutionOrder() {
+        System.out.println("Execution Order: " + executionOrder);
+    }
+    @Override
+    public void printStatistics() {
+        System.out.println("Statistics: ");
+        System.out.println("    AWT    TAT");
+        for (Process p : processes) {
+            System.out.println(p.name + ": " + p.turnaroundTime + "    " + p.waitingTime);
+        }
+        //avg
+        double avgTurnaroundTime = 0;
+        double avgWaitingTime = 0;
+        for (Process p : processes) {
+            avgTurnaroundTime += p.turnaroundTime;
+            avgWaitingTime += p.waitingTime;
+        }
+        avgTurnaroundTime /= processes.size();
+        avgWaitingTime /= processes.size();
+        System.out.println("Average Turnaround Time: " + avgTurnaroundTime);
+        System.out.println("Average Waiting Time: " + avgWaitingTime);
+         System.out.println("=".repeat(100));
+    }
    
     @Override
     public Map<String, Integer> getWaitingTimes() {
@@ -520,8 +573,35 @@ class PreemptivePriorityScheduler implements Scheduler {
                 time++;
             }
         }
+        System.err.println("Priority Scheduler");
+        printExecutionOrder();
+        printStatistics();
     }
    
+     @Override
+    public void printExecutionOrder() {
+        System.out.println("Execution Order: " + executionOrder);
+    }
+    @Override
+    public void printStatistics() {
+        System.out.println("Statistics: ");
+        System.out.println("    AWT    TAT");
+        for (Process p : processes) {
+            System.out.println(p.name + ": " + p.turnaroundTime + "    " + p.waitingTime);
+        }
+        //avg
+        double avgTurnaroundTime = 0;
+        double avgWaitingTime = 0;
+        for (Process p : processes) {
+            avgTurnaroundTime += p.turnaroundTime;
+            avgWaitingTime += p.waitingTime;
+        }
+        avgTurnaroundTime /= processes.size();
+        avgWaitingTime /= processes.size();
+        System.out.println("Average Turnaround Time: " + avgTurnaroundTime);
+        System.out.println("Average Waiting Time: " + avgWaitingTime);
+        System.out.println("=".repeat(100));
+    }
     @Override
     public Map<String, Integer> getWaitingTimes() {
         Map<String, Integer> map = new HashMap<>();
@@ -586,8 +666,11 @@ class AGScheduler implements Scheduler {
                 }
             }
         }
-        
+        System.err.println("AG Scheduler");
         calculateStatistics();
+        printExecutionOrder();
+        printStatistics();
+        printQuantumHistory();
     }
     
     private boolean allProcessesFinished() {
@@ -816,7 +899,38 @@ class AGScheduler implements Scheduler {
     }
     
    
-
+    @Override
+    public void printExecutionOrder() {
+        System.out.println("Execution Order: " + executionOrder);
+    }
+    @Override
+    public void printStatistics() {
+        System.out.println("Statistics: ");
+          System.out.println("    AWT    TAT");
+        for (Process p : processes) {
+            System.out.println(p.name + ": " + p.turnaroundTime + "     " + p.waitingTime);
+        }
+        //avg
+        double avgTurnaroundTime = 0;
+        double avgWaitingTime = 0;
+      
+        for (Process p : processes) {
+            avgTurnaroundTime += p.turnaroundTime;
+            avgWaitingTime += p.waitingTime;
+        }
+        avgTurnaroundTime /= processes.size();
+        avgWaitingTime /= processes.size();
+        System.out.println("Average Turnaround Time: " + avgTurnaroundTime);
+        System.out.println("Average Waiting Time: " + avgWaitingTime);
+    }
+    public void printQuantumHistory() {
+        System.out.println("Quantum History: ");
+        for (Process p : processes) {
+            System.out.println(p.name + ": " + p.quantumHistory);
+        }
+        System.out.println("=".repeat(100));
+      
+    }
     // Getters for stats/output
     @Override
     public List<String> getExecutionOrder() { return executionOrder; }
