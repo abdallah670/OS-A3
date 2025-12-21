@@ -31,7 +31,7 @@ private static int passedCount = 0;
     }
     @TestFactory
     Stream<DynamicTest> testFromFiles() {
-        File dir = new File("test_cases_v5\\AG");
+        File dir = new File("test_cases\\AG");
         File[] testFiles = dir.listFiles((d, name) -> name.matches("AG_test\\d+\\.json"));
 
         if (testFiles == null) return Stream.empty();
@@ -145,3 +145,4 @@ private static int passedCount = 0;
         return m.find() ? Integer.parseInt(m.group(1)) : 0;
     }
 }
+
