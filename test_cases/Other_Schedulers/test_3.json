@@ -1,11 +1,15 @@
 {
+    "name": "Test Case 3: Varied burst times with starvation risk",
     "input": {
+      "contextSwitch": 1,
+      "rrQuantum": 4,
+      "agingInterval": 4,
       "processes": [
-        {"name": "P1", "arrival": 0, "burst": 10, "priority": 5, "quantum": 5},
-        {"name": "P2", "arrival": 2, "burst": 5, "priority": 1, "quantum": 4},
-        {"name": "P3", "arrival": 5, "burst": 3, "priority": 2, "quantum": 6},
-        {"name": "P4", "arrival": 8, "burst": 7, "priority": 1, "quantum": 3},
-        {"name": "P5", "arrival": 10, "burst": 2, "priority": 3, "quantum": 7}
+        {"name": "P1", "arrival": 0, "burst": 10, "priority": 5},
+        {"name": "P2", "arrival": 2, "burst": 5, "priority": 1},
+        {"name": "P3", "arrival": 5, "burst": 3, "priority": 2},
+        {"name": "P4", "arrival": 8, "burst": 7, "priority": 1},
+        {"name": "P5", "arrival": 10, "burst": 2, "priority": 3}
       ]
     },
     "expectedOutput": {
@@ -34,16 +38,16 @@
         "averageTurnaroundTime": 22.4
       },
       "Priority": {
-        "executionOrder": ["P1", "P2", "P4", "P3", "P4", "P3", "P4", "P1", "P3", "P5", "P1"],
+        "executionOrder": ["P1", "P2", "P4", "P3", "P4", "P1", "P4", "P5"],
         "processResults": [
-          {"name": "P1", "waitingTime": 27, "turnaroundTime": 37},
+          {"name": "P1", "waitingTime": 17, "turnaroundTime": 27},
           {"name": "P2", "waitingTime": 1, "turnaroundTime": 6},
-          {"name": "P3", "waitingTime": 18, "turnaroundTime": 21},
-          {"name": "P4", "waitingTime": 7, "turnaroundTime": 14},
-          {"name": "P5", "waitingTime": 17, "turnaroundTime": 19}
+          {"name": "P3", "waitingTime": 5, "turnaroundTime": 8},
+          {"name": "P4", "waitingTime": 16, "turnaroundTime": 23},
+          {"name": "P5", "waitingTime": 22, "turnaroundTime": 24}
         ],
-        "averageWaitingTime": 14.0,
-        "averageTurnaroundTime": 19.4
+        "averageWaitingTime": 12.2,
+        "averageTurnaroundTime": 17.6
       }
     }
   }

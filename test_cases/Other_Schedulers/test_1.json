@@ -1,11 +1,15 @@
 {
+    "name": "Test Case 1: Basic mixed arrivals",
     "input": {
+      "contextSwitch": 1,
+      "rrQuantum": 2,
+      "agingInterval": 5,
       "processes": [
-        {"name": "P1", "arrival": 0, "burst": 8, "priority": 3, "quantum": 4},
-        {"name": "P2", "arrival": 1, "burst": 4, "priority": 1, "quantum": 3},
-        {"name": "P3", "arrival": 2, "burst": 2, "priority": 4, "quantum": 5},
-        {"name": "P4", "arrival": 3, "burst": 1, "priority": 2, "quantum": 2},
-        {"name": "P5", "arrival": 4, "burst": 3, "priority": 5, "quantum": 4}
+        {"name": "P1", "arrival": 0, "burst": 8, "priority": 3},
+        {"name": "P2", "arrival": 1, "burst": 4, "priority": 1},
+        {"name": "P3", "arrival": 2, "burst": 2, "priority": 4},
+        {"name": "P4", "arrival": 3, "burst": 1, "priority": 2},
+        {"name": "P5", "arrival": 4, "burst": 3, "priority": 5}
       ]
     },
     "expectedOutput": {
@@ -22,28 +26,28 @@
         "averageTurnaroundTime": 11.0
       },
       "RR": {
-        "executionOrder": ["P1", "P2", "P3", "P4", "P5", "P1"],
+        "executionOrder": ["P1", "P2", "P3", "P1", "P4", "P5", "P2", "P1", "P5", "P1"],
         "processResults": [
-          {"name": "P1", "waitingTime": 15, "turnaroundTime": 23},
-          {"name": "P2", "waitingTime": 4, "turnaroundTime": 8},
-          {"name": "P3", "waitingTime": 8, "turnaroundTime": 10},
-          {"name": "P4", "waitingTime": 10, "turnaroundTime": 11},
-          {"name": "P5", "waitingTime": 11, "turnaroundTime": 14}
+          {"name": "P1", "waitingTime": 19, "turnaroundTime": 27},
+          {"name": "P2", "waitingTime": 14, "turnaroundTime": 18},
+          {"name": "P3", "waitingTime": 4, "turnaroundTime": 6},
+          {"name": "P4", "waitingTime": 9, "turnaroundTime": 10},
+          {"name": "P5", "waitingTime": 17, "turnaroundTime": 20}
         ],
-        "averageWaitingTime": 9.6,
-        "averageTurnaroundTime": 13.2
+        "averageWaitingTime": 12.6,
+        "averageTurnaroundTime": 16.2
       },
       "Priority": {
-        "executionOrder": ["P1", "P2", "P1", "P4", "P1", "P3", "P1", "P5", "P1", "P3", "P5"],
+        "executionOrder": ["P1", "P2", "P1", "P4", "P1", "P3", "P5"],
         "processResults": [
-          {"name": "P1", "waitingTime": 15, "turnaroundTime": 23},
+          {"name": "P1", "waitingTime": 9, "turnaroundTime": 17},
           {"name": "P2", "waitingTime": 1, "turnaroundTime": 5},
-          {"name": "P3", "waitingTime": 21, "turnaroundTime": 23},
+          {"name": "P3", "waitingTime": 16, "turnaroundTime": 18},
           {"name": "P4", "waitingTime": 6, "turnaroundTime": 7},
-          {"name": "P5", "waitingTime": 21, "turnaroundTime": 24}
+          {"name": "P5", "waitingTime": 17, "turnaroundTime": 20}
         ],
-        "averageWaitingTime": 12.8,
-        "averageTurnaroundTime": 16.4
+        "averageWaitingTime": 9.8,
+        "averageTurnaroundTime": 13.4
       }
     }
   }

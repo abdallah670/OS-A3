@@ -1,13 +1,16 @@
 {
     "name": "Test Case 6: Mixed scenario - comprehensive test",
     "input": {
+      "contextSwitch": 1,
+      "rrQuantum": 4,
+      "agingInterval": 5,
       "processes": [
-        {"name": "P1", "arrival": 0, "burst": 14, "priority": 4, "quantum": 6},
-        {"name": "P2", "arrival": 3, "burst": 7, "priority": 2, "quantum": 8},
-        {"name": "P3", "arrival": 6, "burst": 10, "priority": 5, "quantum": 5},
-        {"name": "P4", "arrival": 9, "burst": 5, "priority": 1, "quantum": 10},
-        {"name": "P5", "arrival": 12, "burst": 8, "priority": 3, "quantum": 4},
-        {"name": "P6", "arrival": 15, "burst": 4, "priority": 6, "quantum": 7}
+        {"name": "P1", "arrival": 0, "burst": 14, "priority": 4},
+        {"name": "P2", "arrival": 3, "burst": 7, "priority": 2},
+        {"name": "P3", "arrival": 6, "burst": 10, "priority": 5},
+        {"name": "P4", "arrival": 9, "burst": 5, "priority": 1},
+        {"name": "P5", "arrival": 12, "burst": 8, "priority": 3},
+        {"name": "P6", "arrival": 15, "burst": 4, "priority": 6}
       ]
     },
     "expectedOutput": {
@@ -38,17 +41,17 @@
         "averageTurnaroundTime": 41.67
       },
       "Priority": {
-        "executionOrder": ["P1", "P2", "P4", "P2", "P4", "P1", "P2", "P5", "P3", "P1", "P5", "P1", "P5", "P6", "P3", "P1", "P5", "P1", "P3", "P1", "P6", "P1", "P3", "P6", "P3", "P6"],
+        "executionOrder": ["P1", "P2", "P4", "P2", "P4", "P1", "P3", "P4", "P5", "P6"],
         "processResults": [
-          {"name": "P1", "waitingTime": 46, "turnaroundTime": 60},
-          {"name": "P2", "waitingTime": 12, "turnaroundTime": 19},
-          {"name": "P3", "waitingTime": 55, "turnaroundTime": 65},
-          {"name": "P4", "waitingTime": 4, "turnaroundTime": 9},
-          {"name": "P5", "waitingTime": 26, "turnaroundTime": 34},
-          {"name": "P6", "waitingTime": 54, "turnaroundTime": 58}
+          {"name": "P1", "waitingTime": 16, "turnaroundTime": 30},
+          {"name": "P2", "waitingTime": 7, "turnaroundTime": 14},
+          {"name": "P3", "waitingTime": 25, "turnaroundTime": 35},
+          {"name": "P4", "waitingTime": 29, "turnaroundTime": 34},
+          {"name": "P5", "waitingTime": 32, "turnaroundTime": 40},
+          {"name": "P6", "waitingTime": 38, "turnaroundTime": 42}
         ],
-        "averageWaitingTime": 32.83,
-        "averageTurnaroundTime": 40.83
+        "averageWaitingTime": 24.6,
+        "averageTurnaroundTime": 32.6
       }
     }
   }
