@@ -1,7 +1,3 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
 
 class Process {
@@ -10,7 +6,7 @@ class Process {
     int burstTime;
     int priority;
     int originalQuantum;
-    
+      int originalPriority;  // Store original priority for tie-breaking
     // Dynamic state
     int remainingTime;
     int currentQuantum;
@@ -27,10 +23,7 @@ class Process {
     
     // History
     List<Integer> quantumHistory = new ArrayList<>();
-<<<<<<< HEAD
     public int lastReadyTime;
-=======
->>>>>>> 0c5b4d07e4813f46a8ff340912655710ed2e8dc6
     
     public Process(String name, int arrivalTime, int burstTime, int priority, int quantum) {
         this.name = name;
@@ -38,7 +31,7 @@ class Process {
         this.burstTime = burstTime;
         this.priority = priority;
         this.originalQuantum = quantum;
-        
+            this.originalPriority = priority;  // Store original for tie-breaking
         this.remainingTime = burstTime;
         this.currentQuantum = quantum;
         this.quantumUsed = 0;
@@ -92,10 +85,10 @@ class Process {
 // ==================== BASE SCHEDULER INTERFACE ====================
 interface Scheduler {
     void schedule();
-    void printExecutionOrder();
-    void printStatistics();
+   
     Map<String, Integer> getWaitingTimes();
     Map<String, Integer> getTurnaroundTimes();
+    List<String> getExecutionOrder();
 }
 
 // ==================== PREEMPTIVE SJF SCHEDULER ====================
@@ -173,28 +166,10 @@ class PreemptiveSJFScheduler implements Scheduler {
             p.waitingTime = p.turnaroundTime - p.burstTime;
         }
 
-        printExecutionOrder();
-        printStatistics();
+      
 }
 
     
-    @Override
-    public void printExecutionOrder() {
-        System.out.println("Execution Order:");
-        for (String s : executionOrder) 
-            System.out.print("| " + s + " ");
-        System.out.println("|");
-    }
-    
-    @Override
-    public void printStatistics() {
-        System.out.println("\nProcess\tWaiting Time\tTurnaround Time");
-        for (Process p : processes) {
-            System.out.println(p.name + "\t\t" +
-                    p.waitingTime + "\t\t" +
-                    p.turnaroundTime);
-        }
-    }
     
     @Override
     public Map<String, Integer> getWaitingTimes() {
@@ -212,6 +187,11 @@ class PreemptiveSJFScheduler implements Scheduler {
             map.put(p.name, p.turnaroundTime);
         }
         return map;
+    }
+
+    @Override
+    public List<String> getExecutionOrder() {
+        return new ArrayList<>(executionOrder);
     }
 }
 
@@ -364,43 +344,7 @@ class RoundRobinScheduler implements Scheduler {
         }
     }
 
-    @Override
-    public void printExecutionOrder() {
-        System.out.println("Execution Order:");
-        System.out.print("|");
-        for (int i = 0; i < executionOrder.size(); i++) {
-            System.out.print(" " + executionOrder.get(i) + " |");
-            if ((i + 1) % 10 == 0 && i != executionOrder.size() - 1) {
-                System.out.print("\n|");
-            }
-        }
-        System.out.println();
-    }
-
-    @Override
-    public void printStatistics() {
-        System.out.println("\nProcess\tWaiting Time\tTurnaround Time");
-        for (Process p : processes) {
-            System.out.println(p.name + "\t\t" +
-                    p.waitingTime + "\t\t" +
-                    p.turnaroundTime);
-        }
-
-        //calculate averages
-        double avgWaitingTime = processes.stream()
-                .mapToInt(p -> p.waitingTime)
-                .average()
-                .orElse(0.0);
-
-        double avgTurnaroundTime = processes.stream()
-                .mapToInt(p -> p.turnaroundTime)
-                .average()
-                .orElse(0.0);
-
-        System.out.printf("\nAverage Waiting Time: %.2f", avgWaitingTime);
-        System.out.printf("\nAverage Turnaround Time: %.2f\n", avgTurnaroundTime);
-    }
-
+   
     @Override
     public Map<String, Integer> getWaitingTimes() {
         Map<String, Integer> map = new HashMap<>();
@@ -452,118 +396,132 @@ class PreemptivePriorityScheduler implements Scheduler {
     public PreemptivePriorityScheduler(List<Process> processes, int contextSwitchTime, int agingInterval) {
         this.processes = new ArrayList<>(processes);
         this.contextSwitchTime = contextSwitchTime;
-        this.agingInterval = agingInterval* 2;
+        this.agingInterval = agingInterval;
     }
     
-    @Override
+      @Override
     public void schedule() {
-        processes.sort(Comparator.comparingInt(p -> p.arrivalTime));
         List<Process> readyQueue = new ArrayList<>();
+        List<Process> allProcesses = new ArrayList<>(processes);
+        List<Process> completed = new ArrayList<>();
+        
+        allProcesses.sort(Comparator.comparingInt(p -> p.arrivalTime));
 
-        int currentTime = 0;
-        int completed = 0;
-        Process running = null;
-        boolean needReselect = true;
+        Process current = null;
+        int time = 0;
+        String lastExecuted = null;
 
-        while (completed < processes.size()) {
-
-            // Add arrivals
-            for (Process p : processes) {
-                if (p.arrivalTime == currentTime && p.remainingTime > 0 && !readyQueue.contains(p)) {
+        while (completed.size() < allProcesses.size()) {
+            // 1. Add arrived processes
+            for (Process p : allProcesses) {
+                if (p.arrivalTime <= time && p.remainingTime > 0 &&
+                    !readyQueue.contains(p) && p != current && !completed.contains(p)) {
                     readyQueue.add(p);
-                    p.lastReadyTime = currentTime;
-                    needReselect = true;
                 }
             }
 
-            // Aging
-            for (Process p : readyQueue) {
-                if ((currentTime - p.lastReadyTime) > agingInterval) {
-                    p.priority = Math.max(0, p.priority - 1);
-                    p.lastReadyTime = currentTime;
-                }
-            }
-
-            //  Select process only at boundaries
-            if (needReselect) {
-                Process highest = null;
+            // 2. Apply aging to waiting processes
+            if (agingInterval > 0) {
                 for (Process p : readyQueue) {
-                    if (highest == null || p.priority < highest.priority) {
-                        highest = p;
+                    int executed = p.burstTime - p.remainingTime;
+                    int waited = time - p.arrivalTime - executed;
+                    int boost = waited / agingInterval;
+                    p.priority = Math.max(1, p.originalPriority - boost);
+                }
+            }
+
+            // 3. Select highest priority candidate
+            Process candidate = null;
+            if (!readyQueue.isEmpty()) {
+                candidate = readyQueue.get(0);
+                for (Process p : readyQueue) {
+                    if (p.priority < candidate.priority ||
+                        (p.priority == candidate.priority && p.arrivalTime < candidate.arrivalTime) ||
+                        (p.priority == candidate.priority && p.arrivalTime == candidate.arrivalTime &&
+                         p.name.compareTo(candidate.name) < 0)) {
+                        candidate = p;
                     }
                 }
+            }
 
-                if (highest != null) {
-                    running = highest;
-                    readyQueue.remove(highest);
-                    executionOrder.add(running.name);
-                    if (running.startTime == -1) running.startTime = currentTime;
-                    needReselect = false;
+            // 4. Decide if we need to switch
+            boolean needSwitch = false;
+            if (current == null && candidate != null) {
+                needSwitch = true;
+            } else if (current != null && candidate != null) {
+                if (candidate.priority < current.priority ||
+                    (candidate.priority == current.priority && candidate.arrivalTime < current.arrivalTime) ||
+                    (candidate.priority == current.priority && candidate.arrivalTime == candidate.arrivalTime &&
+                     candidate.name.compareTo(current.name) < 0)) {
+                    needSwitch = true;
                 }
             }
 
-            // Execute
-            if (running != null) {
-                running.remainingTime--;
-                currentTime++;
+            // 5. Perform switch if needed
+            if (needSwitch) {
+                if (current != null && current.remainingTime > 0) {
+                    readyQueue.add(current);
+                }
+                if (candidate != null) {
+                    readyQueue.remove(candidate);
+                }
+                current = candidate;
 
-                if (running.remainingTime == 0) {
-                    running.finishTime = currentTime;
-                    running.turnaroundTime = running.finishTime - running.arrivalTime;
-                    running.waitingTime = running.turnaroundTime - running.burstTime;
-                    completed++;
-                    running = null;
-                    needReselect = true;
+                // Log new block only if different process
+                if (current != null && (lastExecuted == null || !lastExecuted.equals(current.name))) {
+                    executionOrder.add(current.name);
+                    lastExecuted = current.name;
+                }
 
-                    // Context switch
-                    currentTime += contextSwitchTime;
+                // === CRITICAL FIX ===
+                // Do NOT apply context switch at time 0 for the very first process
+                if (contextSwitchTime > 0 && !(time == 0 && current != null && lastExecuted != null && lastExecuted.equals(current.name))) {
+                    time += contextSwitchTime;
+
+                    // Arrivals during CS
+                    for (Process p : allProcesses) {
+                        if (p.arrivalTime <= time && p.remainingTime > 0 &&
+                            !readyQueue.contains(p) && p != current && !completed.contains(p)) {
+                            readyQueue.add(p);
+                        }
+                    }
+
+                    // Re-apply aging
+                    if (agingInterval > 0) {
+                        for (Process p : readyQueue) {
+                            int executed = p.burstTime - p.remainingTime;
+                            int waited = time - p.arrivalTime - executed;
+                            int boost = waited / agingInterval;
+                            p.priority = Math.max(1, p.originalPriority - boost);
+                        }
+                    }
+                    continue;
+                }
+            }
+
+            // 6. Execute one unit
+            if (current != null && current.remainingTime > 0) {
+                if (current.startTime == -1) {
+                    current.startTime = time;
+                }
+
+                current.remainingTime--;
+                time++;
+
+                if (current.remainingTime == 0) {
+                    current.finishTime = time;
+                    current.turnaroundTime = time - current.arrivalTime;
+                    current.waitingTime = current.turnaroundTime - current.burstTime;
+                    completed.add(current);
+                    current = null;
+                    lastExecuted = null;
                 }
             } else {
-                currentTime++;
-                needReselect = true;
+                time++;
             }
         }
     }
-    
-    @Override
-    public void printExecutionOrder() {
-        // To be implemented
-        System.out.println("Execution Order:");
-        System.out.print("|");
-        for (int i = 0; i < executionOrder.size(); i++) {
-            System.out.print(" " + executionOrder.get(i) + " |");
-            if ((i + 1) % 10 == 0 && i != executionOrder.size() - 1) {
-                System.out.print("\n|");
-            }
-        }
-        System.out.println();
-    }
-    
-    @Override
-    public void printStatistics() {
-       
-        System.out.println("\nProcess\tWaiting Time\tTurnaround Time");
-        for (Process p : processes) {
-            System.out.println(p.name + "\t\t" +
-                    p.waitingTime + "\t\t" +
-                    p.turnaroundTime);
-        }
-
-        //calculate averages
-        double avgWaitingTime = processes.stream()
-                .mapToInt(p -> p.waitingTime)
-                .average()
-                .orElse(0.0);
-
-        double avgTurnaroundTime = processes.stream()
-                .mapToInt(p -> p.turnaroundTime)
-                .average()
-                .orElse(0.0);
-
-        System.out.printf("\nAverage Waiting Time: %.2f", avgWaitingTime);
-        System.out.printf("\nAverage Turnaround Time: %.2f\n", avgTurnaroundTime);
-    }
-    
+   
     @Override
     public Map<String, Integer> getWaitingTimes() {
         Map<String, Integer> map = new HashMap<>();
@@ -581,12 +539,14 @@ class PreemptivePriorityScheduler implements Scheduler {
         }
         return map;
     }
-    
-   
+    @Override
+    public List<String> getExecutionOrder() {
+        return new ArrayList<>(executionOrder);
+    }
 }
 
 // ==================== AG SCHEDULER ====================
-class AGScheduler {
+class AGScheduler implements Scheduler {
     private List<Process> processes;
     private List<Process> readyQueue = new ArrayList<>();
     private List<String> executionOrder = new ArrayList<>();
@@ -855,7 +815,10 @@ class AGScheduler {
         }
     }
     
+   
+
     // Getters for stats/output
+    @Override
     public List<String> getExecutionOrder() { return executionOrder; }
     public List<Integer> getQuantumHistory(String name) {
         for(Process p : processes) if(p.name.equals(name)) return p.quantumHistory;
@@ -876,65 +839,5 @@ class AGScheduler {
     }
     public double getAverageTurnaroundTime() {
         return processes.stream().mapToInt(p -> p.turnaroundTime).average().orElse(0.0);
-    }
-}
-
-// ==================== MAIN SIMULATOR CLASS ====================
-class CPUSchedulerSimulator {
-    private List<Process> processes = new ArrayList<>();
-    private int rrTimeQuantum;
-    private int contextSwitchTime;
-    private int priorityAgingInterval = 5;  // Default
-    
-    // Scheduler instances
-    private PreemptiveSJFScheduler sjfScheduler;
-    private RoundRobinScheduler rrScheduler;
-    private PreemptivePriorityScheduler priorityScheduler;
-    private AGScheduler agScheduler;
-    
-    // Input methods
-    public void readInput() {
-        // To be implemented
-    }
-    
-    public void addProcess(String name, int arrivalTime, int burstTime, int priority, int quantum) {
-        processes.add(new Process(name, arrivalTime, burstTime, priority, quantum));
-    }
-    
-    // Run all schedulers
-    public void runAllSchedulers() {
-        // Create scheduler instances
-        sjfScheduler = new PreemptiveSJFScheduler(processes, contextSwitchTime);
-        rrScheduler = new RoundRobinScheduler(processes, rrTimeQuantum, contextSwitchTime);
-        priorityScheduler = new PreemptivePriorityScheduler(processes, contextSwitchTime, priorityAgingInterval);
-        agScheduler = new AGScheduler(processes, contextSwitchTime);
-        
-        // Run schedulers
-        System.out.println("\n=== Preemptive SJF Scheduling ===");
-        sjfScheduler.schedule();
-        
-        System.out.println("\n=== Round Robin Scheduling ===");
-        rrScheduler.schedule();
-        
-        System.out.println("\n=== Preemptive Priority Scheduling ===");
-        priorityScheduler.schedule();
-        
-        System.out.println("\n=== AG Scheduling ===");
-        agScheduler.schedule();
-       
-    }
-    
-    // Unit test helper
-    public void runTest(String testName, List<Process> testProcesses) {
-        // To be implemented
-    }
-}
-
-// ==================== MAIN CLASS ====================
-public class Main {
-    public static void main(String[] args) {
-        CPUSchedulerSimulator simulator = new CPUSchedulerSimulator();
-        simulator.readInput();
-        simulator.runAllSchedulers();
     }
 }
