@@ -30,7 +30,7 @@ public class OtherSchedulersJsonTest {
 
     @TestFactory
     Stream<DynamicTest> testOtherSchedulers() {
-        File dir = new File("test_cases_v5\\Other_Schedulers");
+        File dir = new File("test_cases\\Other_Schedulers");
         File[] testFiles = dir.listFiles((d, name) -> name.endsWith(".json"));
 
         if (testFiles == null) return Stream.empty();
@@ -219,3 +219,4 @@ public class OtherSchedulersJsonTest {
         return m.find() ? Integer.parseInt(m.group(1)) : 0;
     }
 }
+
